@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:netflix_clone/pages/detail_page.dart';
 import 'package:http/http.dart' as http;
 import 'package:netflix_clone/utils/colors.dart';
+import 'package:netflix_clone/utils/constants.dart';
 
 class MoviesPage extends StatefulWidget {
   final PageController homePageController;
@@ -15,9 +16,14 @@ class MoviesPage extends StatefulWidget {
 
 class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMixin {
   bool _loading = false;
-  String selectedStatus = 'Relevance';
-  final List<String> _sortOptions = ['Relevance', 'Most popular', 'Highest Rated'];
+  String selectedStatus = 'Most Popular';
+  final List<String> _sortOptions = ['Most Popular', 'Highest Rated'];
   List<dynamic> movies = [];
+  String popularApi =
+      'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&api_key=e35c24dd8bae89146b08b893d01e719d';
+
+  String highRatedApi =
+      'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=vote_average.desc&api_key=e35c24dd8bae89146b08b893d01e719d';
 
   @override
   void initState() {
@@ -30,11 +36,12 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
       _loading = true;
     });
     final response = await http.get(
-      Uri.parse('https://api.tvmaze.com/search/shows?q=the'),
+      Uri.parse(selectedStatus == 'Highest Rated' ? highRatedApi : popularApi),
     );
     if (response.statusCode == 200) {
       setState(() {
-        movies = json.decode(response.body);
+        var moviesMap = json.decode(response.body);
+        movies = List.from(moviesMap['results']);
       });
     } else {
       if (mounted) {
@@ -132,6 +139,7 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
                         onSelected: (value) {
                           setState(() {
                             selectedStatus = value;
+                            fetchMovies();
                           });
                         },
                         child: Container(
@@ -170,7 +178,7 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
                 SliverGrid.builder(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 3,
-                    childAspectRatio: 0.6,
+                    childAspectRatio: 0.55,
                     crossAxisSpacing: 8,
                     mainAxisSpacing: 40,
                   ),
@@ -199,15 +207,26 @@ class MovieCard extends StatefulWidget {
 
 class _MovieCardState extends State<MovieCard> {
   String poster = '', name = '', year = '';
-  List<String> genre = [''];
+  List<int> genreList = [-1];
+  String genre = 'Unknown';
+  String imagePath = 'http://image.tmdb.org/t/p/w500';
   @override
   void initState() {
-    poster = (widget.movie['show']['image'] != null) ? widget.movie['show']['image']['medium'] : '';
-    name = widget.movie['show']['name'] ?? '';
-    year = widget.movie['show']['premiered'] ?? 'Year ';
-    if (widget.movie['show']['genres'] != null) {
-      genre = widget.movie['show']['genres'].length > 0 ? List<String>.from(widget.movie['show']['genres']) : ['Other'];
+    poster = (widget.movie['poster_path'] != null) ? widget.movie['poster_path'] : '';
+    name = widget.movie['original_title'] ?? '';
+
+    //YEAR
+    year = widget.movie['release_date'] ?? 'Unknown';
+    if (year.length < 4) {
+      year = 'Unknown';
     }
+
+    //GENRE
+    if (widget.movie['genre_ids'] != null) {
+      genreList = widget.movie['genre_ids'].length > 0 ? List<int>.from(widget.movie['genre_ids']) : [-1];
+    }
+    genre = genresMap[genreList[0]] ?? 'Unknown';
+
     super.initState();
   }
 
@@ -231,28 +250,29 @@ class _MovieCardState extends State<MovieCard> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 image: DecorationImage(
-                  image: (poster != '') ? NetworkImage(poster) : const AssetImage('assets/default_movie.png'),
+                  image:
+                      (poster != '') ? NetworkImage(imagePath + poster) : const AssetImage('assets/default_movie.png'),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             name,
             style: TextStyle(
               color: colorScheme.inversePrimary,
-              fontSize: 14,
+              fontSize: 12.5,
               fontWeight: FontWeight.bold,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            '${year.substring(0, 4)} • ${genre[0]}',
+            '${year == 'Unknown' ? 'Unknown' : year.substring(0, 4)} • $genre',
             style: TextStyle(
               color: Colors.grey[600],
-              fontSize: 12,
+              fontSize: 11.5,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,

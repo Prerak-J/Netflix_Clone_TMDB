@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:netflix_clone/pages/detail_page.dart';
 import 'package:netflix_clone/utils/colors.dart';
 import 'package:http/http.dart' as http;
+import 'package:netflix_clone/utils/constants.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -16,6 +17,8 @@ class _SearchScreenState extends State<SearchScreen> with AutomaticKeepAliveClie
   final TextEditingController _searchController = TextEditingController();
   bool _loading = false;
   String searchTerm = '';
+  String searchApi =
+      'https://api.themoviedb.org/3/search/movie?query={searchTerm}&include_adult=false&language=en-US&page=1&api_key=e35c24dd8bae89146b08b893d01e719d';
 
   List<dynamic> movies = [];
 
@@ -30,11 +33,14 @@ class _SearchScreenState extends State<SearchScreen> with AutomaticKeepAliveClie
       _loading = true;
     });
     final response = await http.get(
-      Uri.parse('https://api.tvmaze.com/search/shows?q=$searchTerm'),
+      Uri.parse(
+        searchApi.replaceFirst(RegExp(r'{searchTerm}'), searchTerm),
+      ),
     );
     if (response.statusCode == 200) {
       setState(() {
-        movies = json.decode(response.body);
+        var moviesMap = json.decode(response.body);
+        movies = List.from(moviesMap['results']);
       });
     } else {
       if (mounted) {
@@ -177,19 +183,26 @@ class MovieCard extends StatefulWidget {
 
 class _MovieCardState extends State<MovieCard> {
   String poster = '', name = '', year = '';
-  List<String> genre = [''];
+  List<int> genreList = [-1];
+  String genre = 'Unknown';
+  String imagePath = 'http://image.tmdb.org/t/p/w500';
   @override
   void initState() {
-    poster = (widget.movie['show']['image'] != null) ? widget.movie['show']['image']['medium'] : '';
-    name = widget.movie['show']['name'] ?? '';
-    year = widget.movie['show']['premiered'] ?? 'Year ';
-    if (widget.movie['show']['genres'] != null) {
-      if (widget.movie['show']['genres'].isEmpty) {
-        genre = [''];
-      } else {
-        genre = List<String>.from(widget.movie['show']['genres']);
-      }
+    poster = (widget.movie['poster_path'] != null) ? widget.movie['poster_path'] : '';
+    name = widget.movie['original_title'] ?? '';
+
+    //YEAR
+    year = widget.movie['release_date'] ?? 'Unknown';
+    if (year.length < 4) {
+      year = 'Unknown';
     }
+
+    //GENRE
+    if (widget.movie['genre_ids'] != null) {
+      genreList = widget.movie['genre_ids'].length > 0 ? List<int>.from(widget.movie['genre_ids']) : [-1];
+    }
+    genre = genresMap[genreList[0]] ?? 'Unknown';
+
     super.initState();
   }
 
@@ -213,28 +226,29 @@ class _MovieCardState extends State<MovieCard> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 image: DecorationImage(
-                  image: (poster != '') ? NetworkImage(poster) : const AssetImage('assets/default_movie.png'),
+                  image:
+                      (poster != '') ? NetworkImage(imagePath + poster) : const AssetImage('assets/default_movie.png'),
                   fit: BoxFit.cover,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: 6),
           Text(
             name,
             style: TextStyle(
               color: colorScheme.inversePrimary,
-              fontSize: 14,
+              fontSize: 12.5,
               fontWeight: FontWeight.bold,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
           Text(
-            '${year.substring(0, 4)} • ${genre[0]}',
+            '${year == 'Unknown' ? 'Unknown' : year.substring(0, 4)} • $genre',
             style: TextStyle(
               color: Colors.grey[600],
-              fontSize: 12,
+              fontSize: 11.5,
             ),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
