@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:html/parser.dart';
 import 'package:netflix_clone/main.dart';
+import 'package:netflix_clone/utils/constants.dart';
 import 'package:provider/provider.dart';
 
 class DetailPage extends StatefulWidget {
@@ -15,35 +16,55 @@ class DetailPage extends StatefulWidget {
 
 class _DetailPageState extends State<DetailPage> {
   String poster = '';
+  String backdropImg = '';
   String name = '';
   String year = '';
-  String runtime = '';
   String lang = '';
   String description = '';
   String rating = '-';
-  List<String> genre = [''];
+  List<int> genreList = [-1];
+  List<String> genre = ['Unknown'];
+  String imagePath = 'http://image.tmdb.org/t/p/w500';
 
   Widget posterImage = Container();
   @override
   void initState() {
-    poster = (widget.movie['show']['image'] != null) ? widget.movie['show']['image']['original'] : '';
-    name = widget.movie['show']['name'] ?? '';
-    year = widget.movie['show']['premiered'] ?? 'Year ';
-    if (widget.movie['show']['genres'] != null) {
-      genre = List<String>.from(widget.movie['show']['genres']);
+    poster = (widget.movie['poster_path'] != null) ? widget.movie['poster_path'] : '';
+    backdropImg = (widget.movie['backdrop_path'] != null) ? widget.movie['backdrop_path'] : '';
+    name = widget.movie['original_title'] ?? '';
+
+    //YEAR
+    year = widget.movie['release_date'] ?? 'Unknown';
+    if (year.length < 4) {
+      year = 'Unknown';
     }
-    runtime = (widget.movie['show']['runtime'] != null) ? '${widget.movie['show']['runtime']} min' : '';
-    lang = (widget.movie['show']['language'] != null) ? '${widget.movie['show']['language']}' : '';
+
+    //GENRE
+    if (widget.movie['genre_ids'] != null) {
+      genreList = widget.movie['genre_ids'].length > 0 ? List<int>.from(widget.movie['genre_ids']) : [-1];
+    }
+    genre = List.generate(genreList.length, (i) => genresMap[genreList[i]] ?? 'Unknown');
+
+    //LANGUAGE
+    lang = (widget.movie['original_language'] != null) ? '${widget.movie['original_language']}' : '';
+    switch (lang) {
+      case 'en':
+        lang = 'English';
+        break;
+      default:
+        lang.toUpperCase();
+        break;
+    }
 
     //RATING
     {
-      num ratingNum = (widget.movie['show']['rating'] != null) ? widget.movie['show']['rating']['average'] ?? 0.0 : 0.0;
+      num ratingNum = (widget.movie['vote_average'] != null) ? widget.movie['vote_average'] ?? 0.0 : 0.0;
       rating = ratingNum.toStringAsFixed(1);
     }
 
     //SUMMARY
     {
-      description = widget.movie['show']['summary'] ?? '';
+      description = widget.movie['overview'] ?? '';
       final doc = parse(description);
       description = parse(doc.body!.text).documentElement!.text;
     }
@@ -56,14 +77,14 @@ class _DetailPageState extends State<DetailPage> {
 
     //POSTER
     posterImage = BackdropFilter(
-      filter: ImageFilter.blur(sigmaX: 50, sigmaY: 20),
+      filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
       child: Container(
         height: 400,
         width: MediaQuery.of(context).size.width * 0.6,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
           image: DecorationImage(
-            image: (poster != '') ? NetworkImage(poster) : const AssetImage('assets/default_movie.png'),
+            image: (poster != '') ? NetworkImage(imagePath + poster) : const AssetImage('assets/default_movie.png'),
             fit: BoxFit.contain,
           ),
         ),
@@ -93,12 +114,12 @@ class _DetailPageState extends State<DetailPage> {
               children: [
                 Center(
                   child: Stack(
-                    alignment: Alignment.center,
+                    alignment: Alignment.centerLeft,
                     children: [
-                      poster != ''
+                      backdropImg != ''
                           ? Image.network(
-                              poster,
-                              fit: BoxFit.fill,
+                              imagePath + backdropImg,
+                              fit: BoxFit.cover,
                               height: 400,
                               width: double.infinity,
                             )
@@ -113,7 +134,7 @@ class _DetailPageState extends State<DetailPage> {
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 40, 8, 0),
+                  padding: const EdgeInsets.fromLTRB(8, 80, 8, 0),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
@@ -123,7 +144,7 @@ class _DetailPageState extends State<DetailPage> {
                           name,
                           style: TextStyle(
                             color: colorScheme.inversePrimary,
-                            fontSize: 32,
+                            fontSize: 28,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -153,7 +174,7 @@ class _DetailPageState extends State<DetailPage> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
                   child: Text(
-                    '${year.substring(0, 4)} | ${genre.join(', ')} | $runtime',
+                    '${year == 'Unknown' ? 'Unknown' : year} | ${genre.join(', ')}',
                     style: TextStyle(
                       color: themeProvider.themeMode == ThemeMode.dark ? Colors.white70 : Colors.black87,
                       fontSize: 14,
