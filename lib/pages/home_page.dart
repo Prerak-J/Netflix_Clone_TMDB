@@ -1,7 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:netflix_clone/main.dart';
 import 'package:netflix_clone/pages/movies_page.dart';
 import 'package:netflix_clone/screens/search_screen.dart';
+import 'package:provider/provider.dart';
 
 class HomePage extends StatefulWidget {
   final bool search;
@@ -45,7 +47,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).colorScheme.tertiary,
         automaticallyImplyLeading: false,
         leadingWidth: 0.0,
         title: InkWell(
@@ -55,6 +57,35 @@ class _HomePageState extends State<HomePage> {
             width: 100,
           ),
         ),
+        actions: [
+          Consumer<ThemeProvider>(
+            builder: (context, themeProvider, child) {
+              return Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Row(
+                  children: [
+                    Text(
+                      themeProvider.themeMode == ThemeMode.light ? 'Light Mode' : 'Dark Mode',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.inversePrimary,
+                      ),
+                    ),
+                    const SizedBox(
+                      width: 4,
+                    ),
+                    Switch(
+                      activeColor: Colors.red[900],
+                      value: themeProvider.themeMode == ThemeMode.dark,
+                      onChanged: (value) {
+                        themeProvider.toggleTheme();
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+        ],
       ),
       body: PageView(
         controller: pageController,
@@ -72,7 +103,7 @@ class _HomePageState extends State<HomePage> {
         iconSize: 30,
         activeColor: Colors.redAccent,
         onTap: navigationTapped,
-        backgroundColor: Colors.black,
+        backgroundColor: Theme.of(context).colorScheme.tertiary,
         currentIndex: _page,
         items: const [
           BottomNavigationBarItem(

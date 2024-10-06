@@ -70,16 +70,17 @@ class _SearchScreenState extends State<SearchScreen> with AutomaticKeepAliveClie
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
     return _loading
         ? Container(
             alignment: Alignment.center,
-            color: primaryBlack,
+            color: colorScheme.primary,
             child: const CircularProgressIndicator(
               color: Colors.redAccent,
             ),
           )
         : Container(
-            color: primaryBlack,
+            color: colorScheme.primary,
             padding: const EdgeInsets.all(8.0),
             child: CustomScrollView(
               slivers: [
@@ -100,7 +101,7 @@ class _SearchScreenState extends State<SearchScreen> with AutomaticKeepAliveClie
                         width: 1.4,
                       ),
                       borderRadius: BorderRadius.circular(8),
-                      color: secondaryBlack,
+                      color: colorScheme.secondary,
                     ),
                     child: TextField(
                       onSubmitted: (value) => setState(() {
@@ -110,21 +111,21 @@ class _SearchScreenState extends State<SearchScreen> with AutomaticKeepAliveClie
                       maxLines: 1,
                       controller: _searchController,
                       textAlignVertical: TextAlignVertical.center,
-                      cursorColor: Colors.white,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      cursorColor: colorScheme.inversePrimary,
+                      style: TextStyle(
+                        color: colorScheme.inversePrimary,
                         fontSize: 14,
                       ),
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         hintText: 'Search Movies, TV Series...',
                         hintStyle: TextStyle(
-                          color: Colors.grey,
+                          color: Colors.grey[600],
                           fontSize: 14,
                         ),
-                        contentPadding: EdgeInsets.only(bottom: 10),
+                        contentPadding: const EdgeInsets.only(bottom: 10),
                         icon: Icon(
                           Icons.search_rounded,
-                          color: Colors.white,
+                          color: colorScheme.inversePrimary,
                         ),
                         border: InputBorder.none,
                       ),
@@ -137,8 +138,8 @@ class _SearchScreenState extends State<SearchScreen> with AutomaticKeepAliveClie
                           padding: const EdgeInsets.only(top: 40),
                           child: Text(
                             searchTerm == '' ? 'Please enter a movie name' : 'Oops, no such movie found!',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: colorScheme.inversePrimary,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -194,6 +195,7 @@ class _MovieCardState extends State<MovieCard> {
 
   @override
   Widget build(BuildContext context) {
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -220,8 +222,8 @@ class _MovieCardState extends State<MovieCard> {
           const SizedBox(height: 4),
           Text(
             name,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colorScheme.inversePrimary,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -230,8 +232,8 @@ class _MovieCardState extends State<MovieCard> {
           ),
           Text(
             '${year.substring(0, 4)} • ${genre[0]}',
-            style: const TextStyle(
-              color: Colors.grey,
+            style: TextStyle(
+              color: Colors.grey[600],
               fontSize: 12,
             ),
             maxLines: 1,

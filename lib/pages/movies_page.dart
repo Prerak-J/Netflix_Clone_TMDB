@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:netflix_clone/pages/detail_page.dart';
-import 'package:netflix_clone/utils/colors.dart';
 import 'package:http/http.dart' as http;
+import 'package:netflix_clone/utils/colors.dart';
 
 class MoviesPage extends StatefulWidget {
   final PageController homePageController;
@@ -15,7 +15,8 @@ class MoviesPage extends StatefulWidget {
 
 class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMixin {
   bool _loading = false;
-
+  String selectedStatus = 'Relevance';
+  final List<String> _sortOptions = ['Relevance', 'Most popular', 'Highest Rated'];
   List<dynamic> movies = [];
 
   @override
@@ -29,7 +30,7 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
       _loading = true;
     });
     final response = await http.get(
-      Uri.parse('https://api.tvmaze.com/search/shows?q=all'),
+      Uri.parse('https://api.tvmaze.com/search/shows?q=the'),
     );
     if (response.statusCode == 200) {
       setState(() {
@@ -63,22 +64,23 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
   @override
   Widget build(BuildContext context) {
     super.build(context);
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
     return _loading
         ? Container(
             alignment: Alignment.center,
-            color: primaryBlack,
+            color: colorScheme.primary,
             child: const CircularProgressIndicator(
               color: Colors.redAccent,
             ),
           )
         : Container(
             padding: const EdgeInsets.all(8.0),
-            color: primaryBlack,
+            color: colorScheme.primary,
             child: CustomScrollView(
               slivers: [
                 SliverAppBar(
                   forceMaterialTransparency: true,
-                  backgroundColor: secondaryBlack,
+                  backgroundColor: colorScheme.secondary,
                   automaticallyImplyLeading: false,
                   leading: null,
                   leadingWidth: 0.0,
@@ -94,28 +96,73 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
                           width: 1.4,
                         ),
                         borderRadius: BorderRadius.circular(8),
-                        color: secondaryBlack,
+                        color: colorScheme.secondary,
                       ),
-                      child: const Row(
+                      child: Row(
                         children: [
                           Icon(
                             Icons.search_rounded,
-                            color: Colors.grey,
+                            color: colorScheme.inversePrimary,
                             size: 20,
                           ),
-                          SizedBox(
+                          const SizedBox(
                             width: 12,
                           ),
                           Text(
                             'Search Movies, TV Series...',
                             style: TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w300,
-                                wordSpacing: 0.5,
-                                letterSpacing: 0.3,
-                                color: Colors.white54),
-                          )
+                              fontSize: 14,
+                              fontWeight: FontWeight.w300,
+                              wordSpacing: 0.5,
+                              letterSpacing: 0.3,
+                              color: colorScheme.inversePrimary,
+                            ),
+                          ),
                         ],
+                      ),
+                    ),
+                  ),
+                ),
+                SliverToBoxAdapter(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 4, 16),
+                      child: PopupMenuButton<String>(
+                        onSelected: (value) {
+                          setState(() {
+                            selectedStatus = value;
+                          });
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: deepRed,
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Sort By: $selectedStatus ',
+                                style: const TextStyle(color: Colors.white, fontSize: 13.5),
+                              ),
+                              const Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: Colors.white,
+                                size: 20,
+                              )
+                            ],
+                          ),
+                        ),
+                        itemBuilder: (BuildContext context) {
+                          return _sortOptions.map((String option) {
+                            return PopupMenuItem<String>(
+                              value: option,
+                              child: Text(option),
+                            );
+                          }).toList();
+                        },
                       ),
                     ),
                   ),
@@ -136,7 +183,7 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
             ),
           );
   }
-  
+
   @override
   bool get wantKeepAlive => true;
 }
@@ -159,13 +206,14 @@ class _MovieCardState extends State<MovieCard> {
     name = widget.movie['show']['name'] ?? '';
     year = widget.movie['show']['premiered'] ?? 'Year ';
     if (widget.movie['show']['genres'] != null) {
-      genre = List<String>.from(widget.movie['show']['genres']);
+      genre = widget.movie['show']['genres'].length > 0 ? List<String>.from(widget.movie['show']['genres']) : ['Other'];
     }
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
+    ColorScheme colorScheme = Theme.of(context).colorScheme;
     return InkWell(
       onTap: () {
         Navigator.push(
@@ -183,9 +231,7 @@ class _MovieCardState extends State<MovieCard> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(8),
                 image: DecorationImage(
-                  image: (poster != '')
-                      ? NetworkImage(poster)
-                      : const AssetImage('assets/default_movie.png'),
+                  image: (poster != '') ? NetworkImage(poster) : const AssetImage('assets/default_movie.png'),
                   fit: BoxFit.cover,
                 ),
               ),
@@ -194,8 +240,8 @@ class _MovieCardState extends State<MovieCard> {
           const SizedBox(height: 4),
           Text(
             name,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: colorScheme.inversePrimary,
               fontSize: 14,
               fontWeight: FontWeight.bold,
             ),
@@ -204,8 +250,8 @@ class _MovieCardState extends State<MovieCard> {
           ),
           Text(
             '${year.substring(0, 4)} • ${genre[0]}',
-            style: const TextStyle(
-              color: Colors.grey,
+            style: TextStyle(
+              color: Colors.grey[600],
               fontSize: 12,
             ),
             maxLines: 1,
