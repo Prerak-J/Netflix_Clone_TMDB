@@ -5,6 +5,7 @@ import 'package:netflix_clone/pages/detail_page.dart';
 import 'package:http/http.dart' as http;
 import 'package:netflix_clone/utils/colors.dart';
 import 'package:netflix_clone/utils/constants.dart';
+import 'package:netflix_clone/utils/keys.dart';
 
 class MoviesPage extends StatefulWidget {
   final PageController homePageController;
@@ -20,10 +21,10 @@ class _MoviesPageState extends State<MoviesPage> with AutomaticKeepAliveClientMi
   final List<String> _sortOptions = ['Most Popular', 'Highest Rated'];
   List<dynamic> movies = [];
   String popularApi =
-      'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&api_key=e35c24dd8bae89146b08b893d01e719d';
+      'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=popularity.desc&api_key=$apiKey';
 
   String highRatedApi =
-      'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=vote_average.desc&api_key=e35c24dd8bae89146b08b893d01e719d';
+      'https://api.themoviedb.org/3/discover/movie?include_adult=false&include_video=false&language=en-US&page=1&sort_by=vote_average.desc&api_key=$apiKey';
 
   @override
   void initState() {

@@ -5,6 +5,7 @@ import 'package:netflix_clone/pages/detail_page.dart';
 import 'package:netflix_clone/utils/colors.dart';
 import 'package:http/http.dart' as http;
 import 'package:netflix_clone/utils/constants.dart';
+import 'package:netflix_clone/utils/keys.dart';
 
 class SearchScreen extends StatefulWidget {
   const SearchScreen({super.key});
@@ -18,7 +19,7 @@ class _SearchScreenState extends State<SearchScreen> with AutomaticKeepAliveClie
   bool _loading = false;
   String searchTerm = '';
   String searchApi =
-      'https://api.themoviedb.org/3/search/movie?query={searchTerm}&include_adult=false&language=en-US&page=1&api_key=e35c24dd8bae89146b08b893d01e719d';
+      'https://api.themoviedb.org/3/search/movie?query={searchTerm}&include_adult=false&language=en-US&page=1&api_key=$apiKey';
 
   List<dynamic> movies = [];
 
